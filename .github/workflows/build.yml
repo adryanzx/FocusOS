@@ -2,7 +2,10 @@ name: Build APK
 on:
   push:
     branches: [main]
+    paths-ignore: ['docs/**']
   workflow_dispatch: {}
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,8 +32,16 @@ jobs:
           cd "$PROJ"
           gradle assembleDebug --no-daemon --stacktrace
           mkdir -p "$GITHUB_WORKSPACE/saida"
-          cp app/build/outputs/apk/debug/*.apk "$GITHUB_WORKSPACE/saida/"
+          cp app/build/outputs/apk/debug/*.apk "$GITHUB_WORKSPACE/saida/FocusOS.apk"
       - uses: actions/upload-artifact@v4
         with:
           name: FocusOS-apk
           path: saida/*.apk
+      - name: Publicar Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: FocusOS build ${{ github.run_number }}
+          body: APK gerado automaticamente a partir do commit ${{ github.sha }}.
+          make_latest: true
+          files: saida/FocusOS.apk
